@@ -7,7 +7,7 @@ extern crate num_traits;
 extern crate itertools;
 
 use std::fs;
-use bellman_ce::pairing::bn256::Bn256;
+use bellman_ce::pairing::bls12_381::Bls12;
 use phase2::circom_circuit::{
     load_params_file,
     prove,
@@ -33,7 +33,7 @@ fn main() {
     let rng = create_rng();
     let params = load_params_file(params_filename);
     let mut circuit = circuit_from_json_file(circuit_filename);
-    circuit.witness =  Some(witness_from_json_file::<Bn256>(witness_filename));
+    circuit.witness =  Some(witness_from_json_file::<Bls12>(witness_filename));
 
     println!("Proving...");
     let proof = prove(circuit.clone(), &params, rng).unwrap();

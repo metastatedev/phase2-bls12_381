@@ -16,7 +16,7 @@ use bellman_ce::pairing::{
     CurveAffine,
     CurveProjective,
     Wnaf,
-    bn256::{
+    bls12_381::{
         G2,
         G1Affine,
         G2Affine,

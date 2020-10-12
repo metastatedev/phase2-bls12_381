@@ -39,8 +39,8 @@ use bellman_ce::pairing::{
     CurveAffine,
     CurveProjective,
     Wnaf,
-    bn256::{
-        Bn256,
+    bls12_381::{
+        Bls12,
         Fr,
         G1,
         G2,
@@ -79,7 +79,7 @@ use super::utils::*;
 /// they contain a transcript of contributions at the end, which can be verified.
 #[derive(Clone)]
 pub struct MPCParameters {
-    params: Parameters<Bn256>,
+    params: Parameters<Bls12>,
     cs_hash: [u8; 64],
     contributions: Vec<PublicKey>
 }
@@ -101,7 +101,7 @@ impl MPCParameters {
         should_filter_points_at_infinity: bool,
         radix_directory: &String,
     ) -> Result<MPCParameters, SynthesisError>
-        where C: Circuit<Bn256>
+        where C: Circuit<Bls12>
     {
         let mut assembly = KeypairAssembly {
             num_inputs: 0,
@@ -398,7 +398,7 @@ impl MPCParameters {
     }
 
     /// Get the underlying Groth16 `Parameters`
-    pub fn get_params(&self) -> &Parameters<Bn256> {
+    pub fn get_params(&self) -> &Parameters<Bls12> {
         &self.params
     }
 
@@ -526,7 +526,7 @@ impl MPCParameters {
     /// contributors obtained when they ran
     /// `MPCParameters::contribute`, for ensuring that contributions
     /// exist in the final parameters.
-    pub fn verify<C: Circuit<Bn256>>(
+    pub fn verify<C: Circuit<Bls12>>(
         &self,
         circuit: C,
         should_filter_points_at_infinity: bool,

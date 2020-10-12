@@ -9,7 +9,7 @@ use std::io::{
 use bellman_ce::pairing::{
     EncodedPoint,
     CurveAffine,
-    bn256::{
+    bls12_381::{
         Fr,
         G1Affine,
         G1Uncompressed,

@@ -32,8 +32,8 @@ use bellman_ce::{
         ff::{
             PrimeField,
         },
-        bn256::{
-            Bn256,
+        bls12_381::{
+            Bls12,
         }
     }
 };
@@ -199,17 +199,17 @@ pub fn verify<E: Engine>(circuit: &CircomCircuit<E>, params: &Parameters<E>, pro
     );
 }
 
-pub fn create_verifier_sol(params: &Parameters<Bn256>) -> String {
+pub fn create_verifier_sol(params: &Parameters<Bls12>) -> String {
     // TODO: use a simple template engine
     let bytes = include_bytes!("verifier_groth.sol");
     let template = String::from_utf8_lossy(bytes);
 
-    let p1_to_str = |p: &<Bn256 as Engine>::G1Affine| {
+    let p1_to_str = |p: &<Bls12 as Engine>::G1Affine| {
         let x = repr_to_big(p.get_x().into_repr());
         let y = repr_to_big(p.get_y().into_repr());
         return format!("uint256({}), uint256({})", x, y)
     };
-    let p2_to_str = |p: &<Bn256 as Engine>::G2Affine| {
+    let p2_to_str = |p: &<Bls12 as Engine>::G2Affine| {
         let x = p.get_x();
         let y = p.get_y();
         let x_c0 = repr_to_big(x.c0.into_repr());
@@ -236,11 +236,11 @@ pub fn create_verifier_sol(params: &Parameters<Bn256>) -> String {
     return template;
 }
 
-pub fn create_verifier_sol_file(params: &Parameters<Bn256>, filename: &str) -> std::io::Result<()> {
+pub fn create_verifier_sol_file(params: &Parameters<Bls12>, filename: &str) -> std::io::Result<()> {
     return fs::write(filename, create_verifier_sol(params).as_bytes());
 }
 
-pub fn proof_to_json(proof: &Proof<Bn256>) -> Result<String, serde_json::error::Error> {
+pub fn proof_to_json(proof: &Proof<Bls12>) -> Result<String, serde_json::error::Error> {
     return serde_json::to_string(&ProofJson {
         protocol: "groth".to_string(),
         pi_a: p1_to_vec(&proof.a),
@@ -249,12 +249,12 @@ pub fn proof_to_json(proof: &Proof<Bn256>) -> Result<String, serde_json::error::
     });
 }
 
-pub fn proof_to_json_file(proof: &Proof<Bn256>, filename: &str) -> std::io::Result<()> {
+pub fn proof_to_json_file(proof: &Proof<Bls12>, filename: &str) -> std::io::Result<()> {
     let str = proof_to_json(proof).unwrap(); // TODO: proper error handling
     return fs::write(filename, str.as_bytes());
 }
 
-pub fn load_params_file(filename: &str) -> Parameters<Bn256> {
+pub fn load_params_file(filename: &str) -> Parameters<Bls12> {
     let reader = OpenOptions::new()
         .read(true)
         .open(filename)
@@ -262,7 +262,7 @@ pub fn load_params_file(filename: &str) -> Parameters<Bn256> {
     return load_params(reader);
 }
 
-pub fn load_params<R: Read>(reader: R) -> Parameters<Bn256> {
+pub fn load_params<R: Read>(reader: R) -> Parameters<Bls12> {
     let should_filter_points_at_infinity = false;
     let params = MPCParameters::read(reader, should_filter_points_at_infinity, true).expect("unable to read params");
     return params.get_params().clone();
@@ -276,7 +276,7 @@ pub fn filter_params<E: Engine>(params: &mut Parameters<E>) {
     params.b_g2 = Arc::new((*params.b_g2).clone().into_iter().filter(|x| !x.is_zero()).collect::<Vec<_>>());
 }
 
-pub fn proving_key_json(params: &Parameters<Bn256>) -> Result<String, serde_json::error::Error> {
+pub fn proving_key_json(params: &Parameters<Bls12>) -> Result<String, serde_json::error::Error> {
     let proving_key = ProvingKeyJson {
         a: params.a.iter().map(|e| p1_to_vec(e)).collect_vec(),
         b1: params.b_g1.iter().map(|e| p1_to_vec(e)).collect_vec(),
@@ -292,26 +292,26 @@ pub fn proving_key_json(params: &Parameters<Bn256>) -> Result<String, serde_json
     return serde_json::to_string(&proving_key);
 }
 
-pub fn proving_key_json_file(params: &Parameters<Bn256>, filename: &str) -> std::io::Result<()> {
+pub fn proving_key_json_file(params: &Parameters<Bls12>, filename: &str) -> std::io::Result<()> {
     let str = proving_key_json(params).unwrap(); // TODO: proper error handling
     return fs::write(filename, str.as_bytes());
 }
 
-pub fn verification_key_json(params: &Parameters<Bn256>) -> Result<String, serde_json::error::Error> {
+pub fn verification_key_json(params: &Parameters<Bls12>) -> Result<String, serde_json::error::Error> {
     let verification_key = VerifyingKeyJson {
         ic: params.vk.ic.iter().map(|e| p1_to_vec(e)).collect_vec(),
         vk_alfa_1: p1_to_vec(&params.vk.alpha_g1),
         vk_beta_2: p2_to_vec(&params.vk.beta_g2),
         vk_gamma_2: p2_to_vec(&params.vk.gamma_g2),
         vk_delta_2: p2_to_vec(&params.vk.delta_g2),
-        vk_alfabeta_12: pairing_to_vec(&Bn256::pairing(params.vk.alpha_g1, params.vk.beta_g2)),
+        vk_alfabeta_12: pairing_to_vec(&Bls12::pairing(params.vk.alpha_g1, params.vk.beta_g2)),
         inputs_count: params.vk.ic.len() - 1,
         protocol: String::from("groth"),
     };
     return serde_json::to_string(&verification_key);
 }
 
-pub fn verification_key_json_file(params: &Parameters<Bn256>, filename: &str) -> std::io::Result<()> {
+pub fn verification_key_json_file(params: &Parameters<Bls12>, filename: &str) -> std::io::Result<()> {
     let str = verification_key_json(params).unwrap(); // TODO: proper error handling
     return fs::write(filename, str.as_bytes());
 }
